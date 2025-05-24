@@ -1,0 +1,41 @@
+#!pip install bilby gwmemory gwpy gwosc matplotlib
+
+import gwmemory
+import matplotlib.pyplot as plt
+import numpy as np
+from gwosc import datasets
+from gwpy.timeseries import TimeSeries
+from gwosc.datasets import event_gps
+import bilby
+import lal
+
+event = "GW150914"
+gps_time = event_gps(event)
+
+detector = "H1"
+sampling_freq = 4096
+strain_data = TimeSeries.fetch_open_data(detector,gps_time - 10.0,gps_time + 10.0,sample_rate=sampling_freq,cache = True, dataset=event)
+strain_data = strain_data.bandpass(10,200)
+strain = strain_data.whiten()
+
+straintimes = strain_data.times.value
+strain = strain_data.value
+
+plt.plot(straintimes,strain)
+plt.show()
+
+# parameters = dict(q=1,spin_1 = [0,0,0.8],spin_2 = [0,0.8,0],total_mass = 60,distance = 410, inc=np.pi/3,phase = 0.0)
+h_mem, frequencies = gwmemory.time_domain_memory(q=1.2,
+    spin_1=[0,0,0.3],
+    spin_2=[0,0,0.2],
+    total_mass=63.1,
+    distance=440.0,
+    model="IMRPhenomXHM",
+    inc=2.8,
+    phase=0.0,
+    times = straintimes)
+
+plt.plot(frequencies,h_mem["plus"])
+#plt.ylim(-1e-27, 1e-27)
+#plt.xlim(10,200)
+plt.show()
